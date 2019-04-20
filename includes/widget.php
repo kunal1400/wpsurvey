@@ -67,8 +67,29 @@ class wpb_widget extends WP_Widget {
       if ( ! empty( $title ) )
       echo $args['before_title'] . $title . $args['after_title'];
 
+      if( current_user_can('editor') || current_user_can('administrator') ) {
+        // Delete cookie if set in parameter
+        if( isset($_GET['deleteCookie']) ) {
+          unset( $_COOKIE[$cookieName] );
+          $deleteFlag = setcookie($cookieName, '', time() - 3600);
+          if( $deleteFlag ) {
+            $redirect = $_SERVER['HTTP_REFERER'];
+            wp_redirect(home_url());
+          }
+        }
+        echo "<a href='?deleteCookie=".$cookieName."'>Delete Cookies</a>";
+      }
+      
       // Get current post
       $queried_object = get_queried_object();
+      $categories = get_the_category($queried_object->ID);
+      $categoryIds = array();
+      
+      if( count($categories) > 0 ) {
+        foreach ($categories as $i => $category) {
+          $categoryIds[] = $category->term_id;
+        }
+      }
 
       if ( $queried_object ) {
         $post_id = $queried_object->ID;
@@ -84,18 +105,28 @@ class wpb_widget extends WP_Widget {
                 "title" => get_the_title($post_id),
               )
             ));
-          // set the cookie and displaying it in widget
-          $flag = setcookie( $cookieName, $cookieValue, 3 * DAYS_IN_SECONDS, COOKIEPATH, COOKIE_DOMAIN );
-          if( $flag ) {
-            echo "<div style='text-align:left;padding-left:0'><a style='color:#1896E0;font-weight:500' href='".get_post_permalink( $post_id )."'>".get_the_title( $post_id )."</a></div>";
+
+          // If post categories is present in widget selected category
+          if( in_array($kwtax, $categoryIds) ) {
+            // set the cookie and displaying it in widget
+            $flag = setcookie( $cookieName, $cookieValue, 3 * DAYS_IN_SECONDS, COOKIEPATH, COOKIE_DOMAIN );
+            if( $flag ) {
+              echo "<div style='text-align:left;padding-left:0'><a style='color:#1896E0;font-weight:500' href='".get_post_permalink( $post_id )."'>".get_the_title( $post_id )."</a></div>";
+            }
           }
+          
         }
         else {
           $oldCookies = json_decode(stripslashes($_COOKIE[$cookieName]), ARRAY_A);
+          
+          // echo "<pre>";
+          // echo $_COOKIE[$cookieName];
+          // print_r($oldCookies);
+          // echo "</pre>";
 
           // Finally creating a HTML again getting the cookie
           $finalCookies = json_decode(stripslashes($_COOKIE[$cookieName]), ARRAY_A);
-          uasort($finalCookies, function($a, $b){
+          uasort($finalCookies, function($a, $b) {
             return strcmp($a['title'], $b['title']);
           });
 
@@ -110,23 +141,28 @@ class wpb_widget extends WP_Widget {
               "title" => get_the_title($post_id),
             );
 
-            // set the cookie and displaying it in widget
-            $flag = setcookie( $cookieName, json_encode($oldCookies), 3 * DAYS_IN_SECONDS, COOKIEPATH, COOKIE_DOMAIN );
-            if( $flag ) {
-              echo "<div style='text-align:left;padding-left:0'><a style='color:#1896E0;font-weight:500' href='".get_post_permalink( $post_id )."'>".get_the_title( $post_id )."</a></div>";
-            }
+            // If post categories is present in widget selected category
+            if( in_array($kwtax, $categoryIds) ) {
+              // set the cookie and displaying it in widget
+              $flag = setcookie( $cookieName, json_encode($oldCookies), 3 * DAYS_IN_SECONDS, COOKIEPATH, COOKIE_DOMAIN );
+              if( $flag ) {
+                echo "<div style='text-align:left;padding-left:0'><a style='color:#1896E0;font-weight:500' href='".get_post_permalink( $post_id )."'>".get_the_title( $post_id )."</a></div>";
+              }
+            }            
+
           }
+
         }
       }
       echo $args['after_widget'];
     }
     else {
-    if( is_post_type_archive('email') ) {     
-      ob_start();
-      wp_redirect( home_url(), 301 );
-      exit(); 
+      if( is_post_type_archive('email') ) {     
+        ob_start();
+        wp_redirect( home_url(), 301 );
+        exit(); 
+      }
     }
-  }
   }
 
 } // Class wpb_widget ends here
