@@ -68,7 +68,7 @@ add_shortcode( 'start_survey', 'footag_func' );
 add_action('wp_enqueue_scripts', 'my_enqueue_scripts');
 function my_enqueue_scripts() {
 	wp_enqueue_script( 'wordpress_survey', plugin_dir_url( __FILE__ ) . 'js/depo.js', array('jquery'), false, false );
-  wp_enqueue_style( 'wpsv_style', plugin_dir_url( __FILE__ ) . '/css/main.css' );
+  	wp_enqueue_style( 'wpsv_style', plugin_dir_url( __FILE__ ) . '/css/main.css' );
 	wp_enqueue_script( 'wordpress_survey_tabs', plugin_dir_url( __FILE__ ) . 'js/tabs.js', array('jquery'), false, false );
 	wp_localize_script('wordpress_survey_tabs', 'custom_survey_js', array('ajaxurl' => admin_url('admin-ajax.php')));
 	//wp_enqueue_script( 'wordpress_survey_main', plugin_dir_url( __FILE__ ) . 'js/main.js', array('jquery'), false, false );

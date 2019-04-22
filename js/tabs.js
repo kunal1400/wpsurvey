@@ -1,3 +1,13 @@
+  jQuery(document).ready(function() {
+    jQuery(".deleteCookieButton").on("click", function() {
+      var cookieName = jQuery(this).attr("data-cookieName");
+      if(cookieName) {
+        console.log(cookieName + '=;expires=Thu, 01 Jan 1970 00:00:01 GMT;')
+        document.cookie = cookieName + '=;expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+      }
+    })
+  })
+
   function showTab(n) {
     // This function will display the specified tab of the form ...
     var x = document.getElementsByClassName("tab");

@@ -70,14 +70,15 @@ class wpb_widget extends WP_Widget {
       if( current_user_can('editor') || current_user_can('administrator') ) {
         // Delete cookie if set in parameter
         if( isset($_GET['deleteCookie']) ) {
-          unset( $_COOKIE[$cookieName] );
-          $deleteFlag = setcookie($cookieName, '', time() - 3600);
+          //unset( $_COOKIE[$cookieName] );
+          $deleteFlag = setcookie($_GET['deleteCookie'], '', time() - 3600, COOKIEPATH, COOKIE_DOMAIN);
           if( $deleteFlag ) {
             $redirect = $_SERVER['HTTP_REFERER'];
-            wp_redirect(home_url());
+            wp_redirect($redirect);
           }
         }
-        echo "<a href='?deleteCookie=".$cookieName."'>Delete Cookies</a>";
+        echo "<a class='btn btn-warning' href='?deleteCookie=".$cookieName."'>Delete Cookies</a>";
+        // echo "<a class='deleteCookieButton' data-cookieName='".$cookieName."' href='javascript:void(0)'>Delete Cookies</a>";
       }
       
       // Get current post
@@ -142,7 +143,7 @@ class wpb_widget extends WP_Widget {
             );
 
             // If post categories is present in widget selected category
-            if( in_array($kwtax, $categoryIds) ) {
+            if( in_array($kwtax, $categoryIds) ) {              
               // set the cookie and displaying it in widget
               $flag = setcookie( $cookieName, json_encode($oldCookies), 3 * DAYS_IN_SECONDS, COOKIEPATH, COOKIE_DOMAIN );
               if( $flag ) {
