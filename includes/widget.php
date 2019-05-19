@@ -51,7 +51,7 @@ class wpb_widget extends WP_Widget {
   // Creating widget front-end
   public function widget( $args, $instance ) {    
     $title = apply_filters( 'widget_title', $instance['title'] );
-
+    
     // check if category is set in widget
     if( $instance['kwtax'] ) {
       $kwtax = $instance['kwtax'];
@@ -66,12 +66,21 @@ class wpb_widget extends WP_Widget {
       echo $args['before_widget'];
       if ( ! empty( $title ) )
       echo $args['before_title'] . $title . $args['after_title'];
+      
+      $currentUser = wp_get_current_user();
+      $currentUserId = $currentUser->data->ID;
+
+      // echo '<pre>';
+      // print_r($currentUserId);
+      // echo '</pre>';
 
       if( current_user_can('editor') || current_user_can('administrator') ) {
         // Delete cookie if set in parameter
         if( isset($_GET['deleteCookie']) ) {
-          //unset( $_COOKIE[$cookieName] );
-          $deleteFlag = setcookie($_GET['deleteCookie'], '', time() - 3600, COOKIEPATH, COOKIE_DOMAIN);
+          //unset( $_COOKIE[$cookieName] );          
+
+          $deleteFlag = update_user_meta( $currentUserId, $_GET['deleteCookie'], '' );
+          //$deleteFlag = setcookie($_GET['deleteCookie'], '', time() - 3600, COOKIEPATH, COOKIE_DOMAIN);
           if( $deleteFlag ) {
             $redirect = $_SERVER['HTTP_REFERER'];
             wp_redirect($redirect);
@@ -97,28 +106,35 @@ class wpb_widget extends WP_Widget {
         $permalink = get_post_permalink($post_id);
         //echo "<div style='text-align:left;padding-left:0'><a href='".$permalink."'>".get_the_title($post_id)."</a></div>";
 
-        // Checking if cookie is present or not in user computer
-        if( !isset($_COOKIE[$cookieName]) ) {
-          $cookieValue = json_encode(
-            array(
-              $post_id => array(
-                "link" => $permalink,
-                "title" => get_the_title($post_id),
-              )
-            ));
+        $userMeta = get_user_meta($currentUserId, $cookieName, true);
+        
 
-          // If post categories is present in widget selected category
-          if( in_array($kwtax, $categoryIds) ) {
-            // set the cookie and displaying it in widget
-            $flag = setcookie( $cookieName, $cookieValue, 3 * DAYS_IN_SECONDS, COOKIEPATH, COOKIE_DOMAIN );
-            if( $flag ) {
-              echo "<div style='text-align:left;padding-left:0'><a style='color:#1896E0;font-weight:500' href='".get_post_permalink( $post_id )."'>".get_the_title( $post_id )."</a></div>";
-            }
-          }
+        // // Checking if cookie is present or not in user computer
+        // if( !isset($_COOKIE[$cookieName]) ) {
+        //   $cookieValue = json_encode(
+        //     array(
+        //       $post_id => array(
+        //         "link" => $permalink,
+        //         "title" => get_the_title($post_id),
+        //       )
+        //     ));
+
+        //   // If post categories is present in widget selected category
+        //   if( in_array($kwtax, $categoryIds) ) {
+        //     // set the cookie and displaying it in widget            
+        //     $flag = update_user_meta( $currentUserId, $cookieName, $cookieValue );
+        //     //$flag = setcookie( $cookieName, $cookieValue, 3 * DAYS_IN_SECONDS, COOKIEPATH, COOKIE_DOMAIN );
+        //     if( $flag ) {
+        //       echo "<div style='text-align:left;padding-left:0'><a style='color:#1896E0;font-weight:500' href='".get_post_permalink( $post_id )."'>".get_the_title( $post_id )."</a></div>";
+        //     }
+        //   }
           
-        }
-        else {
-          $oldCookies = json_decode(stripslashes($_COOKIE[$cookieName]), ARRAY_A);
+        // }
+        // else {
+          $oldCookies = json_decode(stripslashes($userMeta), ARRAY_A);
+          // echo '<pre>';
+          // print_r($oldCookies);
+          // echo '</pre>';
           
           // echo "<pre>";
           // echo $_COOKIE[$cookieName];
@@ -126,7 +142,7 @@ class wpb_widget extends WP_Widget {
           // echo "</pre>";
 
           // Finally creating a HTML again getting the cookie
-          $finalCookies = json_decode(stripslashes($_COOKIE[$cookieName]), ARRAY_A);
+          $finalCookies = json_decode(stripslashes($userMeta), ARRAY_A);
           uasort($finalCookies, function($a, $b) {
             return strcmp($a['title'], $b['title']);
           });
@@ -143,9 +159,10 @@ class wpb_widget extends WP_Widget {
             );
 
             // If post categories is present in widget selected category
-            if( in_array($kwtax, $categoryIds) ) {              
+            if( in_array($kwtax, $categoryIds) ) {
               // set the cookie and displaying it in widget
-              $flag = setcookie( $cookieName, json_encode($oldCookies), 3 * DAYS_IN_SECONDS, COOKIEPATH, COOKIE_DOMAIN );
+              $flag = update_user_meta( $currentUserId, $cookieName, json_encode($oldCookies) );
+              //$flag = setcookie( $cookieName, json_encode($oldCookies), 3 * DAYS_IN_SECONDS, COOKIEPATH, COOKIE_DOMAIN );
               if( $flag ) {
                 echo "<div style='text-align:left;padding-left:0'><a style='color:#1896E0;font-weight:500' href='".get_post_permalink( $post_id )."'>".get_the_title( $post_id )."</a></div>";
               }
@@ -153,7 +170,8 @@ class wpb_widget extends WP_Widget {
 
           }
 
-        }
+        //}
+
       }
       echo $args['after_widget'];
     }

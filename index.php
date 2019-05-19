@@ -13,7 +13,7 @@
  * @package           Wordpress Survey
  *
  * @wordpress-plugin
- * Plugin Name:       Wordpress Survery v4
+ * Plugin Name:       Wordpress Survery v5
  * Plugin URI:        https://www.facebook.com
  * Description:       This is a short description of what the plugin does. It's displayed in the WordPress admin area.
  * Version:           1.0.0
