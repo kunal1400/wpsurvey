@@ -306,3 +306,12 @@ function wpb_load_widget() {
     register_widget( 'wpb_widget' );
 }
 add_action( 'widgets_init', 'wpb_load_widget' );
+
+add_action('eMember_login_complete','redirect_back');
+function redirect_back() {
+	if( isset($_GET['ru']) ) {
+		$redirectUrl = $_GET['ru'];
+		wp_redirect($redirectUrl);
+		exit;
+	}	
+}

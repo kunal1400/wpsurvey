@@ -63,83 +63,56 @@ class wpb_widget extends WP_Widget {
 
     // check if post belongs to email post type
     if ( is_singular( 'email' ) ) {
+
       echo $args['before_widget'];
       if ( ! empty( $title ) )
-      echo $args['before_title'] . $title . $args['after_title'];
+      echo $args['before_title'] . $title . $args['after_title'];      
+      if( current_user_can('editor') || current_user_can('administrator') || wp_emember_is_member_logged_in()) {
+        // // Delete cookie if set in parameter
+        // if( isset($_GET['deleteCookie']) ) {
+        //   //unset( $_COOKIE[$cookieName] );          
+
+        //   $deleteFlag = update_user_meta( $currentUserId, $_GET['deleteCookie'], '' );
+        //   //$deleteFlag = setcookie($_GET['deleteCookie'], '', time() - 3600, COOKIEPATH, COOKIE_DOMAIN);
+        //   if( $deleteFlag ) {
+        //     $redirect = $_SERVER['HTTP_REFERER'];
+        //     wp_redirect($redirect);
+        //   }
+        // }
+        // echo "<a class='btn btn-warning' href='?deleteCookie=".$cookieName."'>Delete Cookies</a>";
+        // // echo "<a class='deleteCookieButton' data-cookieName='".$cookieName."' href='javascript:void(0)'>Delete Cookies</a>";
+        $emember_auth  = Emember_Auth::getInstance();
+        $currentUserId = $emember_auth->getUserInfo('member_id');        
+      }
+      else {        
+        $referer = $_SERVER['REQUEST_SCHEME'].'://'.$_SERVER['HTTP_HOST'].$_SERVER['REDIRECT_URL'];
+        // echo $referer;
+        // die;
+        ob_start();
+        wp_redirect( home_url().'/member-login?ru='.$referer , 301 );
+        exit(); 
+      }
       
-      $currentUser = wp_get_current_user();
-      $currentUserId = $currentUser->data->ID;
-
-      // echo '<pre>';
-      // print_r($currentUserId);
-      // echo '</pre>';
-
-      if( current_user_can('editor') || current_user_can('administrator') ) {
-        // Delete cookie if set in parameter
-        if( isset($_GET['deleteCookie']) ) {
-          //unset( $_COOKIE[$cookieName] );          
-
-          $deleteFlag = update_user_meta( $currentUserId, $_GET['deleteCookie'], '' );
-          //$deleteFlag = setcookie($_GET['deleteCookie'], '', time() - 3600, COOKIEPATH, COOKIE_DOMAIN);
-          if( $deleteFlag ) {
-            $redirect = $_SERVER['HTTP_REFERER'];
-            wp_redirect($redirect);
+      if($currentUserId) {
+        // Get current post
+        $queried_object = get_queried_object();
+        $categories = get_the_category($queried_object->ID);
+        $categoryIds = array();
+        
+        if( count($categories) > 0 ) {
+          foreach ($categories as $i => $category) {
+            $categoryIds[] = $category->term_id;
           }
         }
-        echo "<a class='btn btn-warning' href='?deleteCookie=".$cookieName."'>Delete Cookies</a>";
-        // echo "<a class='deleteCookieButton' data-cookieName='".$cookieName."' href='javascript:void(0)'>Delete Cookies</a>";
-      }
-      
-      // Get current post
-      $queried_object = get_queried_object();
-      $categories = get_the_category($queried_object->ID);
-      $categoryIds = array();
-      
-      if( count($categories) > 0 ) {
-        foreach ($categories as $i => $category) {
-          $categoryIds[] = $category->term_id;
-        }
-      }
 
-      if ( $queried_object ) {
-        $post_id = $queried_object->ID;
-        $permalink = get_post_permalink($post_id);
-        //echo "<div style='text-align:left;padding-left:0'><a href='".$permalink."'>".get_the_title($post_id)."</a></div>";
+        if ( $queried_object ) {
+          $post_id = $queried_object->ID;
+          $permalink = get_post_permalink($post_id);
+          //echo "<div style='text-align:left;padding-left:0'><a href='".$permalink."'>".get_the_title($post_id)."</a></div>";
 
-        $userMeta = get_user_meta($currentUserId, $cookieName, true);
-        
-
-        // // Checking if cookie is present or not in user computer
-        // if( !isset($_COOKIE[$cookieName]) ) {
-        //   $cookieValue = json_encode(
-        //     array(
-        //       $post_id => array(
-        //         "link" => $permalink,
-        //         "title" => get_the_title($post_id),
-        //       )
-        //     ));
-
-        //   // If post categories is present in widget selected category
-        //   if( in_array($kwtax, $categoryIds) ) {
-        //     // set the cookie and displaying it in widget            
-        //     $flag = update_user_meta( $currentUserId, $cookieName, $cookieValue );
-        //     //$flag = setcookie( $cookieName, $cookieValue, 3 * DAYS_IN_SECONDS, COOKIEPATH, COOKIE_DOMAIN );
-        //     if( $flag ) {
-        //       echo "<div style='text-align:left;padding-left:0'><a style='color:#1896E0;font-weight:500' href='".get_post_permalink( $post_id )."'>".get_the_title( $post_id )."</a></div>";
-        //     }
-        //   }
+          $userMeta = get_user_meta($currentUserId, $cookieName, true);
           
-        // }
-        // else {
-          $oldCookies = json_decode(stripslashes($userMeta), ARRAY_A);
-          // echo '<pre>';
-          // print_r($oldCookies);
-          // echo '</pre>';
-          
-          // echo "<pre>";
-          // echo $_COOKIE[$cookieName];
-          // print_r($oldCookies);
-          // echo "</pre>";
+          $oldCookies = json_decode(stripslashes($userMeta), ARRAY_A);          
 
           // Finally creating a HTML again getting the cookie
           $finalCookies = json_decode(stripslashes($userMeta), ARRAY_A);
@@ -166,13 +139,12 @@ class wpb_widget extends WP_Widget {
               if( $flag ) {
                 echo "<div style='text-align:left;padding-left:0'><a style='color:#1896E0;font-weight:500' href='".get_post_permalink( $post_id )."'>".get_the_title( $post_id )."</a></div>";
               }
-            }            
+            }
 
           }
-
-        //}
-
-      }
+        }
+    }
+      
       echo $args['after_widget'];
     }
     else {
