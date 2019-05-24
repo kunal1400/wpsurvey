@@ -315,3 +315,50 @@ function redirect_back() {
 		exit;
 	}	
 }
+
+function visitedLinksCallback($atts ) {	
+	$a = shortcode_atts( array(
+		'title' => '',
+	), $atts );
+
+	if( !$a['title'] ) {
+		$html = "<p>Widget title is required which you want to show here</p>";
+		return $html;
+	}
+
+	$emailWidgets = get_option('widget_wpb_widget');
+	$categoryId = null;
+	foreach ($emailWidgets as $key => $emailWidget) {
+		if($emailWidget['title'] == $a['title']) {			
+			$categoryId = $emailWidget['kwtax'];
+		}
+	}
+		
+    if($categoryId) {    
+    	$cookieName = "__email_course_".$categoryId;
+    }
+    else {
+    	$cookieName = "__outsourcethat_today_email_course";      
+    }
+
+    if( current_user_can('editor') || current_user_can('administrator') || wp_emember_is_member_logged_in()) {
+    	$emember_auth  	= Emember_Auth::getInstance();
+    	$currentUserId 	= $emember_auth->getUserInfo('member_id');
+    	$userMeta 		= get_user_meta($currentUserId, $cookieName, true);
+		$finalCookies 	= json_decode(stripslashes($userMeta), ARRAY_A);
+		uasort($finalCookies, function($a, $b) {
+			return strcmp($a['title'], $b['title']);
+		});
+
+		foreach ($finalCookies as $key => $value) {
+			$html .= "<div style='text-align:left;padding-left:0'><a style='color:#1896E0;font-weight:500' href='".get_post_permalink( $key )."'>".get_the_title( $key )."</a></div>";
+		}
+		return $html;
+    }
+    else {
+    	$html = "<p>Please login by your membership account</p>";
+		return $html;
+    }        
+}
+
+add_shortcode( 'visited_links', 'visitedLinksCallback' );

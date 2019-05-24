@@ -143,17 +143,16 @@ class wpb_widget extends WP_Widget {
 
           }
         }
-    }
-      
+      }      
       echo $args['after_widget'];
     }
-    else {
-      if( is_post_type_archive('email') ) {     
-        ob_start();
-        wp_redirect( home_url(), 301 );
-        exit(); 
-      }
-    }
+    // else {
+    //   if( is_post_type_archive('email') ) {     
+    //     ob_start();
+    //     wp_redirect( home_url(), 301 );
+    //     exit(); 
+    //   }
+    // }
   }
 
 } // Class wpb_widget ends here
